@@ -1,0 +1,116 @@
+<script>
+var width = 400;  // širina
+var height = 400;  // visina
+var grid = create_array(height);  // početna mreža ćelija (grid) 
+for (var index = 0; index < 400; index++) {  // for petlja preko indexa prolazi kroz (vodoravno i okomito) po cijeloj ploči
+    grid[index] = [];  // postavljaju se prazne liste koje će se popuniti
+}
+var mirror_grid = create_array(height);  // ćelije koje će se mijenjati (umirati i živiti)
+
+
+// nasumični početni grid
+for (var x = 0; x < width; x++) {  // for petlja po širini (x osi)
+    for (var y = 0; y < height; y++) {  // for petlja po visini (y osi)
+        var random_number  = Math.random();  // generira nasumični broj između 1 i 0
+        var improved_random_number  = (random_number * 2);  // nasumični broj može biti npr. 0.08934..., pa taj broj pomnoži sa 2 
+        var random_binary = Math.floor(improved_random_number);  // zaokružuju se brojeva na 1 ili na 0
+        if (random_binary === 1) {  // provjerava ako je binarni broj jednak tipu podataka i jednak vrijednosti broja 1
+            grid[x][y] = 1;  // odabrana matrica je 1 (živi član)
+        } else {
+            grid[x][y] = 0;  // u protivnom je 0 (mrtvi član)
+        }
+    }
+}
+
+
+// funkcija za prozor igre
+function window_game() {
+    var canvas = document.getElementById("myCanvas");  // postavlja se id koji će se kasnije pozvat u HTML dijelu
+    var ctx = canvas.getContext("2d");  // prikaz platna je 2D
+    ctx.clearRect(0, 0, 400, 400);  // stvara se kvadrat čije početne x i y osi su 0px, a visina i širina kvadrata je 400px
+    for (var x = 1; x < width; x++) {  // petlja koja ide po dužini 
+        for (var y = 1; y < height; y++) {  // petlja koja ide po širini
+            if (grid[x][y] === 1) {  // === -> i tip i vrijednost podataka moraju biti jednake
+                ctx.fillStyle = "#FF0000";  // susjedi su označeni crvenom bojom
+                ctx.fillRect(x, y, 1, 1);  // veličina kvadratića
+            }
+        }
+    }
+    window_animation();  // poziva se funkcija window_animation() koja služi za animaciju članova i njihovih susjeda
+    requestAnimationFrame(window_game);  // metoda koja animira i ažurira animaciju funkcije "window_game"
+}
+
+
+// funkcija za stvaranje liste
+function create_array(rows) { 
+    var arr = [];  // stvara se prazna lista
+    for (var index = 0; index < rows; index++) {  
+        arr[index] = [];  
+    }
+    return arr;  // vraća se ta lista
+}
+
+// drugi dio funkcije "window_game" (animacija igre)
+function window_animation() {  
+    for (var x = 1; x < width - 1; x++) {  // for petlja koja prolazi kroz redove
+        for (var y = 1; y < height - 1; y++) {  // for petlja koja prolazi kroz stupce
+            var all_cells = 0;
+
+            all_cells += grid[x - 1][y - 1];  // gornji lijevi kut
+            all_cells += grid[x - 1][y];  // gornja sredina
+            all_cells += grid[x - 1][y + 1];  // gornji desni kut
+            all_cells += grid[x][y - 1];  // lijeva sredina
+            // all_cells += grid[x][y] -> centar platna
+            all_cells += grid[x][y + 1];  // desna sredina
+            all_cells += grid[x + 1][y - 1];  // donji lijevi kut
+            all_cells += grid[x + 1][y];  // donja sredina
+            all_cells += grid[x + 1][y + 1];  // donji desni kut
+            
+            // 1 -> ćelija preživljava
+            // 0 -> ćelija umire 
+            if (grid[x][y] === 0) { // postavljena if petlja koja provjerava ako je ćelija mrtva
+                switch (all_cells) {
+                    case 3:
+                        mirror_grid[x][y] = 1;  // ako su pored nje 3 susjedne ćelije, pretvara se u živu ćeliju
+                        break;
+                    default:
+                        mirror_grid[x][y] = 0;  // u suprotnome ostavi je mrtvu
+                }
+            } 
+            else if (grid[x][y] === 1) {  // esle if petlja ako je ćelija živa
+                switch (all_cells) {
+                    case 0:
+                    case 1:
+                        mirror_grid[x][y] = 0;  // ako ima samo jednog susjeda, umire od samoće
+                        break;
+                    case 2:
+                    case 3:
+                        mirror_grid[x][y] = 1;  // ako ima tri susjeda, nastavlja živiti
+                    break;
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                        mirror_grid[x][y] = 0;  // ako ima osam susjeda, umire od prenatrpanosti
+                        break;
+                    default:
+                        mirror_grid[x][y] = 0;  // u suprotnome ostavi je mrtvu
+                }
+            }
+        }
+    }
+    for (var x = 0; x < width; x++) {  // for petlja koja prolazi kroz redove
+        for (var y = 0; y < height; y++) {  // for petlja koja prolazi kroz stupce
+            grid[x][y] = mirror_grid[x][y];  // postavlja se da je grid jednak mirror_grid
+        }
+    }
+}
+
+
+</script>
+<html>
+    <body onload="window_game()">  <!-- poziva se funkcija window_game-->
+        <canvas id="myCanvas" width="400" height="400"></canvas>  <!-- id platna je "myCanvas" koji je određen u script dijelu-->
+    </body>
+</html>
